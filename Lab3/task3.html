@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Лаб. 3, Завдання 3 — Послідовність з файлу, сортування, зміни (див. Лаб. 2, завд. 3 і Завд. 1)</title>
+    <style>
+        body { font-family: sans-serif; max-width: 720px; margin: 1rem auto; padding: 0 1rem; }
+        h1 { font-size: 1.2rem; }
+        .task { background: #f5f5f5; padding: 0.75rem; border-radius: 6px; margin: 0.75rem 0; }
+        .section { margin: 1rem 0; }
+        .section h3 { margin: 0 0 0.5rem 0; font-size: 1rem; }
+        .seq-text { padding: 0.5rem; background: #fff; border: 1px solid #ccc; border-radius: 4px; min-height: 1.5em; word-break: break-all; }
+        .seq-buttons { display: flex; flex-wrap: wrap; gap: 0.35rem; margin: 0.5rem 0; }
+        .seq-buttons button { min-width: 2.5rem; padding: 0.4rem 0.5rem; font-size: 0.95rem; cursor: pointer; border: 2px solid #666; border-radius: 6px; background: #fff; }
+        .seq-buttons button:hover { background: #eee; }
+        .seq-buttons button.selected { border-color: #07c; background: #e6f2ff; }
+        .hint { font-size: 0.9rem; color: #555; margin-top: 0.35rem; }
+        .actions { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 0.75rem 0; }
+        .actions button { padding: 0.5rem 0.75rem; cursor: pointer; border-radius: 6px; border: 1px solid #666; background: #fff; }
+        .actions button:hover { background: #eee; }
+        .empty { color: #888; font-style: italic; }
+    </style>
+</head>
+<body>
+    <h1>Завдання 3 (див. завдання 3 лабораторної роботи №2)</h1>
+    <p>Зчитати послідовність із текстового файлу, показати її на сторінці, упорядкувати (критерій: сума цифр, BSort), показати результат. Записати результат у файл (завантаження).</p>
+
+    <div class="task">
+        <p><strong>Варіант 1:</strong> програма надає можливість внести зміни до послідовності шляхом перестановки її елементів тим способом, який був застосований у Завданні 1 (натиснути спочатку один елемент, потім інший — обмін).</p>
+    </div>
+
+    <div class="actions">
+        <input type="file" id="fileInput" accept=".txt,text/*" style="display:none" />
+        <button type="button" id="btnLoad">Вибрати вхідний файл</button>
+        <button type="button" id="btnSave" disabled>Зберегти результат у файл</button>
+    </div>
+
+    <div class="section">
+        <h3>Початкова послідовність (з файлу)</h3>
+        <div class="seq-text" id="originalSeq"><span class="empty">Оберіть вхідний файл</span></div>
+    </div>
+
+    <div class="section">
+        <h3>Упорядкована послідовність (за сумою цифр, BSort)</h3>
+        <div class="seq-text" id="sortedSeq"><span class="empty">—</span></div>
+    </div>
+
+    <div class="section">
+        <h3>Поточна послідовність (можна змінити, як у Завданні 1)</h3>
+        <p class="hint">Натисніть спочатку один елемент, потім інший — вони поміняються місцями.</p>
+        <div class="seq-buttons" id="seqButtons"></div>
+        <div class="seq-text" id="currentSeqText"><span class="empty">—</span></div>
+    </div>
+
+    <script>
+        (function () {
+            var original = [];
+            var current = [];
+            var selectedIdx = null;
+
+            var fileInput = document.getElementById('fileInput');
+            var btnLoad = document.getElementById('btnLoad');
+            var btnSave = document.getElementById('btnSave');
+            var originalSeq = document.getElementById('originalSeq');
+            var sortedSeq = document.getElementById('sortedSeq');
+            var seqButtons = document.getElementById('seqButtons');
+            var currentSeqText = document.getElementById('currentSeqText');
+
+            function sumOfDigits(n) {
+                var x = Math.abs(n);
+                var s = 0;
+                while (x > 0) {
+                    s += x % 10;
+                    x = Math.floor(x / 10);
+                }
+                return s;
+            }
+
+            function bSortIndices(key) {
+                var n = key.length;
+                var indices = [];
+                for (var i = 0; i < n; i++) indices[i] = i;
+                for (var i = 0; i < n - 1; i++) {
+                    for (var j = 0; j < n - 1 - i; j++) {
+                        if (key[indices[j]] > key[indices[j + 1]]) {
+                            var t = indices[j];
+                            indices[j] = indices[j + 1];
+                            indices[j + 1] = t;
+                        }
+                    }
+                }
+                return indices;
+            }
+
+            function sortBySumOfDigits(arr) {
+                var key = [];
+                for (var i = 0; i < arr.length; i++) key[i] = sumOfDigits(arr[i]);
+                var indices = bSortIndices(key);
+                var out = [];
+                for (var i = 0; i < arr.length; i++) out.push(arr[indices[i]]);
+                return out;
+            }
+
+            function parseFileText(text) {
+                var tokens = text.trim().split(/\s+/);
+                var arr = [];
+                for (var i = 0; i < tokens.length; i++) {
+                    var num = parseInt(tokens[i], 10);
+                    if (!Number.isNaN(num)) arr.push(num);
+                }
+                return arr;
+            }
+
+            function renderSeqText(container, arr, emptyMsg) {
+                if (arr.length === 0) {
+                    container.innerHTML = '<span class="empty">' + emptyMsg + '</span>';
+                } else {
+                    container.textContent = arr.join(' ');
+                }
+            }
+
+            function renderButtons() {
+                seqButtons.innerHTML = '';
+                selectedIdx = null;
+                for (var i = 0; i < current.length; i++) {
+                    (function (idx) {
+                        var btn = document.createElement('button');
+                        btn.type = 'button';
+                        btn.textContent = current[idx];
+                        btn.addEventListener('click', function () {
+                            if (selectedIdx === null) {
+                                selectedIdx = idx;
+                                updateButtonSelection();
+                                return;
+                            }
+                            if (selectedIdx === idx) {
+                                selectedIdx = null;
+                                updateButtonSelection();
+                                return;
+                            }
+                            var t = current[selectedIdx];
+                            current[selectedIdx] = current[idx];
+                            current[idx] = t;
+                            var btns = seqButtons.querySelectorAll('button');
+                            btns[selectedIdx].textContent = current[selectedIdx];
+                            btns[idx].textContent = current[idx];
+                            selectedIdx = null;
+                            updateButtonSelection();
+                            renderSeqText(currentSeqText, current, '—');
+                        });
+                        seqButtons.appendChild(btn);
+                    })(i);
+                }
+                renderSeqText(currentSeqText, current, '—');
+            }
+
+            function updateButtonSelection() {
+                var btns = seqButtons.querySelectorAll('button');
+                for (var i = 0; i < btns.length; i++) {
+                    btns[i].classList.toggle('selected', i === selectedIdx);
+                }
+            }
+
+            btnLoad.addEventListener('click', function () {
+                fileInput.click();
+            });
+
+            fileInput.addEventListener('change', function () {
+                var file = fileInput.files[0];
+                if (!file) return;
+                var reader = new FileReader();
+                reader.onload = function (e) {
+                    var text = e.target.result;
+                    original = parseFileText(text);
+                    renderSeqText(originalSeq, original, '(пусто)');
+                    if (original.length === 0) {
+                        sortedSeq.innerHTML = '<span class="empty">—</span>';
+                        current = [];
+                        seqButtons.innerHTML = '';
+                        currentSeqText.innerHTML = '<span class="empty">—</span>';
+                        btnSave.disabled = true;
+                        return;
+                    }
+                    current = sortBySumOfDigits(original.slice());
+                    renderSeqText(sortedSeq, current, '—');
+                    renderButtons();
+                    btnSave.disabled = false;
+                };
+                reader.readAsText(file, 'UTF-8');
+                fileInput.value = '';
+            });
+
+            btnSave.addEventListener('click', function () {
+                if (current.length === 0) return;
+                var text = current.join(' ');
+                var blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+                var url = URL.createObjectURL(blob);
+                var a = document.createElement('a');
+                a.href = url;
+                a.download = 'result.txt';
+                a.click();
+                URL.revokeObjectURL(url);
+            });
+        })();
+    </script>
+</body>
+</html>

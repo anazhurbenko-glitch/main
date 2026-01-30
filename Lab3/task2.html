@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Лаб. 3, Завдання 2 — Влучити в область (див. Лаб. 2, завд. 1), варіант 1</title>
+    <style>
+        body { font-family: sans-serif; max-width: 720px; margin: 1rem auto; padding: 0 1rem; }
+        h1 { font-size: 1.2rem; }
+        .task { background: #f5f5f5; padding: 0.75rem; border-radius: 6px; margin: 0.75rem 0; }
+        canvas { display: block; border: 1px solid #666; margin: 0.5rem 0; background: #fafafa; }
+        .controls { display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center; margin: 0.75rem 0; }
+        .controls label { display: flex; align-items: center; gap: 0.35rem; }
+        .controls input[type="number"] { width: 5rem; padding: 0.35rem; }
+        .hints { margin-top: 1rem; }
+        .hints h3 { margin: 0 0 0.5rem 0; font-size: 1rem; }
+        .hints-log { max-height: 200px; overflow-y: auto; padding: 0.5rem; background: #f9f9f9; border: 1px solid #ddd; border-radius: 4px; font-size: 0.9rem; }
+        .hints-log p { margin: 0.25rem 0; }
+        .hints-log .hit { color: #2e7d32; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <h1>Завдання 2 (див. завдання 1 лабораторної роботи №2)</h1>
+    <p>Влучити точкою в область на площині. Область = (фігура-1 ∪ фігура-2) ∩ фігура-3 — дві вертикальні стрічки (1≤x≤3 та 5≤x≤7) у перетині з (0≤x≤8).</p>
+
+    <div class="task">
+        <p><strong>Варіант 1:</strong> початкові координати задає програма (випадково) і показує їх; корекцію координат ви вводите в поля вводу; підказки накопичуються (ви бачите історію).</p>
+    </div>
+
+    <p><strong>Область і траєкторія:</strong></p>
+    <canvas id="canvas" width="400" height="280"></canvas>
+
+    <p><strong>Поточна точка</strong> (задана програмою випадково; можна змінити через поля вводу):</p>
+    <div class="controls">
+        <label>x: <input type="number" id="inX" step="any" value="0" /></label>
+        <label>y: <input type="number" id="inY" step="any" value="0" /></label>
+        <button type="button" id="btnTry">Перевірити / рух до точки</button>
+    </div>
+    <p id="currentDisplay" style="font-size:0.9rem; color:#555;"></p>
+
+    <div class="hints">
+        <h3>Історія підказок (накопичується):</h3>
+        <div class="hints-log" id="hintsLog"></div>
+    </div>
+
+    <script>
+        (function () {
+            var canvas = document.getElementById('canvas');
+            var ctx = canvas.getContext('2d');
+            var cw = canvas.width;
+            var ch = canvas.height;
+
+            var xMin = 0, xMax = 8, yMin = 0, yMax = 5;
+
+            function toCanvasX(x) {
+                return ((x - xMin) / (xMax - xMin)) * (cw - 40) + 20;
+            }
+            function toCanvasY(y) {
+                return ch - 20 - ((y - yMin) / (yMax - yMin)) * (ch - 40);
+            }
+            function fromCanvasX(px) {
+                return xMin + (px - 20) / (cw - 40) * (xMax - xMin);
+            }
+            function fromCanvasY(py) {
+                return yMin + (ch - 20 - py) / (ch - 40) * (yMax - yMin);
+            }
+
+            function inArea(x, y) {
+                var in1 = x >= 1 && x <= 3;
+                var in2 = x >= 5 && x <= 7;
+                var in3 = x >= 0 && x <= 8;
+                return (in1 || in2) && in3;
+            }
+            function distToStrip(x, a, b) {
+                if (x >= a && x <= b) return 0;
+                return Math.min(Math.abs(x - a), Math.abs(x - b));
+            }
+            function distToArea(x, y) {
+                var d1 = distToStrip(x, 1, 3);
+                var d2 = distToStrip(x, 5, 7);
+                return Math.min(d1, d2);
+            }
+
+            var trajectory = [];
+            var prevDist = null;
+            var attempt = 0;
+            var hit = false;
+            var currentX, currentY;
+
+            function randomInRange(lo, hi) {
+                return lo + Math.random() * (hi - lo);
+            }
+            function setRandomPoint() {
+                currentX = Math.round(randomInRange(0, 8) * 100) / 100;
+                currentY = Math.round(randomInRange(0, 5) * 100) / 100;
+                document.getElementById('inX').value = currentX;
+                document.getElementById('inY').value = currentY;
+                document.getElementById('currentDisplay').textContent = 'Початкова точка (задана програмою): (' + currentX + ', ' + currentY + ')';
+                trajectory = [];
+                prevDist = null;
+                attempt = 0;
+                hit = false;
+                document.getElementById('hintsLog').innerHTML = '';
+                redraw();
+            }
+
+            function addHint(text, isHit) {
+                var log = document.getElementById('hintsLog');
+                var p = document.createElement('p');
+                if (isHit) p.className = 'hit';
+                p.textContent = text;
+                log.appendChild(p);
+                log.scrollTop = log.scrollHeight;
+            }
+
+            function redraw() {
+                ctx.clearRect(0, 0, cw, ch);
+
+                var x1 = toCanvasX(1), x2 = toCanvasX(3), x3 = toCanvasX(5), x4 = toCanvasX(7);
+                var left1 = x1, w1 = x2 - x1, left2 = x3, w2 = x4 - x3;
+
+                ctx.fillStyle = 'rgba(100, 180, 255, 0.35)';
+                ctx.fillRect(left1, 0, w1, ch);
+                ctx.fillRect(left2, 0, w2, ch);
+                ctx.strokeStyle = '#1976d2';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(left1, 0, w1, ch);
+                ctx.strokeRect(left2, 0, w2, ch);
+
+                ctx.fillStyle = '#333';
+                ctx.font = '11px sans-serif';
+                ctx.fillText('x: 0', 18, ch - 4);
+                ctx.fillText('x: 8', cw - 28, ch - 4);
+
+                if (trajectory.length > 0) {
+                    ctx.strokeStyle = '#e65100';
+                    ctx.lineWidth = 2;
+                    ctx.beginPath();
+                    ctx.moveTo(toCanvasX(trajectory[0][0]), toCanvasY(trajectory[0][1]));
+                    for (var i = 1; i < trajectory.length; i++) {
+                        ctx.lineTo(toCanvasX(trajectory[i][0]), toCanvasY(trajectory[i][1]));
+                    }
+                    ctx.stroke();
+
+                    ctx.fillStyle = '#e65100';
+                    for (var j = 0; j < trajectory.length; j++) {
+                        var px = toCanvasX(trajectory[j][0]);
+                        var py = toCanvasY(trajectory[j][1]);
+                        ctx.beginPath();
+                        ctx.arc(px, py, 4, 0, Math.PI * 2);
+                        ctx.fill();
+                    }
+                }
+
+                if (currentX !== undefined && currentY !== undefined && trajectory.length === 0) {
+                    var cx = toCanvasX(currentX);
+                    var cy = toCanvasY(currentY);
+                    ctx.fillStyle = '#c62828';
+                    ctx.beginPath();
+                    ctx.arc(cx, cy, 6, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.strokeStyle = '#fff';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                }
+            }
+
+            document.getElementById('btnTry').addEventListener('click', function () {
+                var x = parseFloat(document.getElementById('inX').value);
+                var y = parseFloat(document.getElementById('inY').value);
+                if (Number.isNaN(x) || Number.isNaN(y)) {
+                    addHint('Введіть коректні числа x та y.', false);
+                    return;
+                }
+
+                if (trajectory.length > 0) {
+                    trajectory.push([x, y]);
+                } else {
+                    trajectory.push([currentX, currentY]);
+                    trajectory.push([x, y]);
+                }
+                currentX = x;
+                currentY = y;
+                document.getElementById('currentDisplay').textContent = 'Поточна точка: (' + x + ', ' + y + ')';
+                attempt++;
+
+                if (inArea(x, y)) {
+                    addHint('Спроба ' + attempt + ': (' + x + ', ' + y + ') — Нарешті ви влучили з ' + attempt + '-ї спроби!', true);
+                    hit = true;
+                } else {
+                    var d = distToArea(x, y);
+                    var msg;
+                    if (prevDist === null) {
+                        msg = 'Спроба ' + attempt + ': (' + x + ', ' + y + ') — Холодно. Продовжуйте.';
+                    } else if (d < prevDist) {
+                        msg = 'Спроба ' + attempt + ': (' + x + ', ' + y + ') — Тепліше.';
+                    } else {
+                        msg = 'Спроба ' + attempt + ': (' + x + ', ' + y + ') — Холодніше.';
+                    }
+                    addHint(msg, false);
+                    prevDist = d;
+                }
+                redraw();
+            });
+
+            setRandomPoint();
+        })();
+    </script>
+</body>
+</html>

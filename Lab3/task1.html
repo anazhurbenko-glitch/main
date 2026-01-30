@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Лаб. 3, Завдання 1 — Перестановка A, B, C, D, E (варіант 1)</title>
+    <style>
+        body { font-family: sans-serif; max-width: 640px; margin: 1.5rem auto; padding: 0 1rem; }
+        h1 { font-size: 1.25rem; }
+        .task { background: #f5f5f5; padding: 0.75rem; border-radius: 6px; margin: 1rem 0; }
+        .inputs { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; margin: 1rem 0; }
+        .inputs label { display: flex; align-items: center; gap: 0.25rem; }
+        .inputs input { width: 4rem; padding: 0.35rem; }
+        .columns { display: flex; gap: 0.5rem; margin: 1rem 0; flex-wrap: wrap; }
+        .col { display: flex; flex-direction: column; align-items: center; gap: 0.25rem; }
+        .col span { font-weight: bold; color: #333; }
+        .col button { min-width: 3.5rem; min-height: 2.5rem; padding: 0.5rem; font-size: 1rem; cursor: pointer; border: 2px solid #666; border-radius: 6px; background: #fff; }
+        .col button:hover { background: #eee; }
+        .col button.selected { border-color: #07c; background: #e6f2ff; }
+        .result { margin-top: 1.5rem; padding: 0.75rem; background: #e8f5e9; border-radius: 6px; }
+        .result h3 { margin: 0 0 0.5rem 0; font-size: 1rem; }
+        .hint { font-size: 0.9rem; color: #555; margin-top: 0.5rem; }
+    </style>
+</head>
+<body>
+    <h1>Завдання 1 (див. завдання 1 лабораторної роботи №1)</h1>
+    <p>Перестановка значень змінних A, B, C, D, E. Варіант перестановки: <strong>ACDBE</strong> (A→A, B→C, C→D, D→B, E→E).</p>
+
+    <div class="task">
+        <p><strong>Завдання:</strong> введіть початкові значення, потім натисніть спочатку першу кнопку, потім другу — між цими двома позиціями відбудеться перестановка (обмін значень).</p>
+    </div>
+
+    <div class="inputs">
+        <span>Початкові значення:</span>
+        <label>A: <input type="text" id="inA" value="A" /></label>
+        <label>B: <input type="text" id="inB" value="B" /></label>
+        <label>C: <input type="text" id="inC" value="C" /></label>
+        <label>D: <input type="text" id="inD" value="D" /></label>
+        <label>E: <input type="text" id="inE" value="E" /></label>
+        <button type="button" id="btnSet">Застосувати</button>
+    </div>
+
+    <p>Елементи (кнопки) — розташування стовпцями. Клік по першій, потім по другій кнопці виконує обмін.</p>
+    <div class="columns" id="columns">
+        <div class="col"><span>A</span><button type="button" data-idx="0" id="btn0">—</button></div>
+        <div class="col"><span>B</span><button type="button" data-idx="1" id="btn1">—</button></div>
+        <div class="col"><span>C</span><button type="button" data-idx="2" id="btn2">—</button></div>
+        <div class="col"><span>D</span><button type="button" data-idx="3" id="btn3">—</button></div>
+        <div class="col"><span>E</span><button type="button" data-idx="4" id="btn4">—</button></div>
+    </div>
+    <p class="hint">Натисніть одну кнопку, потім іншу — значення в цих двох позиціях поміняються місцями.</p>
+
+    <div class="result" id="result">
+        <h3>Поточний стан (після перестановок):</h3>
+        <p id="resultText">A = —, B = —, C = —, D = —, E = —</p>
+        <p class="hint">Результат перестановки за варіантом ACDBE буде: A=A, B=C, C=D, D=B, E=E (значення з відповідних позицій).</p>
+    </div>
+
+    <script>
+        (function () {
+            const variant = 'ACDBE';
+            const labels = ['A', 'B', 'C', 'D', 'E'];
+            let values = ['A', 'B', 'C', 'D', 'E'];
+            let selectedIdx = null;
+
+            const inputs = [document.getElementById('inA'), document.getElementById('inB'), document.getElementById('inC'), document.getElementById('inD'), document.getElementById('inE')];
+            const buttons = [document.getElementById('btn0'), document.getElementById('btn1'), document.getElementById('btn2'), document.getElementById('btn3'), document.getElementById('btn4')];
+            const resultText = document.getElementById('resultText');
+
+            function updateButtons() {
+                for (let i = 0; i < 5; i++) {
+                    buttons[i].textContent = values[i];
+                    buttons[i].classList.toggle('selected', i === selectedIdx);
+                }
+            }
+
+            function updateResult() {
+                const s = labels.map(function (l, i) { return l + ' = ' + values[i]; }).join(', ');
+                resultText.textContent = s;
+            }
+
+            document.getElementById('btnSet').addEventListener('click', function () {
+                for (let i = 0; i < 5; i++) values[i] = inputs[i].value.trim() || labels[i];
+                selectedIdx = null;
+                updateButtons();
+                updateResult();
+            });
+
+            for (let i = 0; i < 5; i++) {
+                buttons[i].addEventListener('click', function () {
+                    const idx = parseInt(this.getAttribute('data-idx'), 10);
+                    if (selectedIdx === null) {
+                        selectedIdx = idx;
+                        updateButtons();
+                        return;
+                    }
+                    if (selectedIdx === idx) {
+                        selectedIdx = null;
+                        updateButtons();
+                        return;
+                    }
+                    var t = values[selectedIdx]; // swap
+                    values[selectedIdx] = values[idx];
+                    values[idx] = t;
+                    selectedIdx = null;
+                    updateButtons();
+                    updateResult();
+                });
+            }
+
+            document.getElementById('btnSet').click();
+        })();
+    </script>
+</body>
+</html>
