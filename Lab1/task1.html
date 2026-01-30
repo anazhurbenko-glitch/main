@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Завдання 1 — Перестановка A, B, C, D, E (варіант ACDBE)</title>
+</head>
+<body>
+    <h1>Завдання 1</h1>
+    <p>Відкрийте консоль браузера (F12) і перезавантажте сторінку, щоб запустити діалог.</p>
+    <p>Або натисніть кнопку нижче:</p>
+    <button onclick="runTask1()">Запустити програму</button>
+
+    <script>
+        /**
+         * Завдання 1: Перестановка значень змінних A, B, C, D, E згідно варіанту ACDBE.
+         * Варіант ACDBE означає:
+         *   значення A → в A,  B → в C,  C → в D,  D → в B,  E → в E
+         */
+        function runTask1() {
+            const variant = 'ACDBE';
+
+            // Запит значень у користувача
+            const a = prompt('Введіть значення змінної A:');
+            const b = prompt('Введіть значення змінної B:');
+            const c = prompt('Введіть значення змінної C:');
+            const d = prompt('Введіть значення змінної D:');
+            const e = prompt('Введіть значення змінної E:');
+
+            // Зберігаємо оригінальні значення для перестановки
+            const original = { A: a, B: b, C: c, D: d, E: e };
+
+            // Варіант ACDBE: 1-й символ — куди йде A, 2-й — куди B, 3-й — C, 4-й — D, 5-й — E
+            // A→A, B→C, C→D, D→B, E→E
+            const result = {};
+            result[variant[0]] = original['A'];  // A йде в A
+            result[variant[1]] = original['B'];  // B йде в C
+            result[variant[2]] = original['C'];  // C йде в D
+            result[variant[3]] = original['D'];  // D йде в B
+            result[variant[4]] = original['E'];  // E йде в E
+
+            const newA = result['A'];
+            const newB = result['B'];
+            const newC = result['C'];
+            const newD = result['D'];
+            const newE = result['E'];
+
+            // Формуємо текст результату
+            const resultText = 
+                'Варіант перестановки: ' + variant + '\n\n' +
+                'До перестановки:\n  A = ' + a + ', B = ' + b + ', C = ' + c + ', D = ' + d + ', E = ' + e + '\n\n' +
+                'Після перестановки:\n  A = ' + newA + ', B = ' + newB + ', C = ' + newC + ', D = ' + newD + ', E = ' + newE;
+
+            alert(resultText);
+
+            // Додатково виводимо в консоль
+            console.log('Завдання 1. Перестановка за варіантом', variant);
+            console.log('Вхідні дані: A =', a, ', B =', b, ', C =', c, ', D =', d, ', E =', e);
+            console.log('Результат:   A =', newA, ', B =', newB, ', C =', newC, ', D =', newD, ', E =', newE);
+        }
+
+        // Автозапуск при завантаженні сторінки (діалог у консолі/браузері)
+        window.addEventListener('load', function () {
+            runTask1();
+        });
+    </script>
+</body>
+</html>

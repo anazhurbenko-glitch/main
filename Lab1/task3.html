@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Завдання 3 — Вертикальні смуги: перетин</title>
+</head>
+<body>
+    <h1>Завдання 3</h1>
+    <p>Дві вертикальні смуги. Визначити, чи потрапляє точка в їх перетин.</p>
+    <p>Вертикальна смуга — множина точок (x, y), де x між двома межами (y довільна).</p>
+    <p>Відкрийте сторінку в браузері — діалог запуститься автоматично. Або натисніть кнопку:</p>
+    <button onclick="runTask3()">Запустити програму</button>
+
+    <script>
+        /**
+         * Завдання 3: Задано дві вертикальні смуги і точку.
+         * Визначити, чи потрапляє точка в перетин смуг.
+         * Вертикальна смуга: x1 <= x <= x2 (y будь-яка).
+         */
+        function runTask3() {
+            alert('Завдання 3: Дві вертикальні смуги. Чи потрапляє точка в перетин?\nВведіть межі смуг (x) та координати точки.');
+
+            var x1Left = parseFloat(prompt('Смуга 1: ліва межа x (мінімум x):', '0'));
+            var x1Right = parseFloat(prompt('Смуга 1: права межа x (максимум x):', '4'));
+            var x2Left = parseFloat(prompt('Смуга 2: ліва межа x (мінімум x):', '2'));
+            var x2Right = parseFloat(prompt('Смуга 2: права межа x (максимум x):', '6'));
+            var px = parseFloat(prompt('Точка: координата x:', '3'));
+            var py = parseFloat(prompt('Точка: координата y:', '1'));
+
+            if ([x1Left, x1Right, x2Left, x2Right, px, py].some(function (n) { return isNaN(n); })) {
+                alert('Помилка: введіть коректні числа.');
+                return;
+            }
+
+            // Нормалізуємо межі (ліва <= права)
+            var s1Min = Math.min(x1Left, x1Right);
+            var s1Max = Math.max(x1Left, x1Right);
+            var s2Min = Math.min(x2Left, x2Right);
+            var s2Max = Math.max(x2Left, x2Right);
+
+            var inStrip1 = px >= s1Min && px <= s1Max;
+            var inStrip2 = px >= s2Min && px <= s2Max;
+            var inIntersection = inStrip1 && inStrip2;
+
+            var resultText =
+                'Смуга 1 (вертикальна): ' + s1Min + ' ≤ x ≤ ' + s1Max + '\n' +
+                'Смуга 2 (вертикальна): ' + s2Min + ' ≤ x ≤ ' + s2Max + '\n' +
+                'Точка: (' + px + ', ' + py + ')\n\n' +
+                'Точка в смузі 1: ' + (inStrip1 ? 'так' : 'ні') + '\n' +
+                'Точка в смузі 2: ' + (inStrip2 ? 'так' : 'ні') + '\n\n' +
+                'Точка потрапляє в перетин смуг: ' + (inIntersection ? 'ТАК' : 'НІ');
+
+            alert(resultText);
+            console.log('Завдання 3. Вертикальні смуги — перетин');
+            console.log('Смуга 1: x ∈ [' + s1Min + ', ' + s1Max + '], Смуга 2: x ∈ [' + s2Min + ', ' + s2Max + ']');
+            console.log('Точка (' + px + ', ' + py + '): перетин =', inIntersection);
+        }
+
+        window.addEventListener('load', function () {
+            runTask3();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Завдання 2 — Трикутник: периметр</title>
+</head>
+<body>
+    <h1>Завдання 2</h1>
+    <p>Трикутник за координатами вершин. Обчислення периметра.</p>
+    <p>Відкрийте сторінку в браузері — діалог запуститься автоматично. Або натисніть кнопку:</p>
+    <button onclick="runTask2()">Запустити програму</button>
+
+    <script>
+        /**
+         * Завдання 2: Для трикутника, заданого координатами вершин, обчислити периметр.
+         * Периметр = сума довжин сторін (відстаней між вершинами).
+         */
+        function runTask2() {
+            alert('Завдання 2: Трикутник за координатами вершин. Обчислення периметра.\nВведіть координати трьох вершин (числа).');
+
+            var x1 = parseFloat(prompt('Введіть x координату вершини 1:', '0'));
+            var y1 = parseFloat(prompt('Введіть y координату вершини 1:', '0'));
+            var x2 = parseFloat(prompt('Введіть x координату вершини 2:', '4'));
+            var y2 = parseFloat(prompt('Введіть y координату вершини 2:', '0'));
+            var x3 = parseFloat(prompt('Введіть x координату вершини 3:', '2'));
+            var y3 = parseFloat(prompt('Введіть y координату вершини 3:', '3'));
+
+            if (isNaN(x1) || isNaN(y1) || isNaN(x2) || isNaN(y2) || isNaN(x3) || isNaN(y3)) {
+                alert('Помилка: введіть коректні числа для координат.');
+                return;
+            }
+
+            function distance(ax, ay, bx, by) {
+                return Math.sqrt((bx - ax) * (bx - ax) + (by - ay) * (by - ay));
+            }
+
+            var side1 = distance(x1, y1, x2, y2);
+            var side2 = distance(x2, y2, x3, y3);
+            var side3 = distance(x3, y3, x1, y1);
+            var perimeter = side1 + side2 + side3;
+
+            var resultText =
+                'Трикутник: вершини (' + x1 + ', ' + y1 + '), (' + x2 + ', ' + y2 + '), (' + x3 + ', ' + y3 + ')\n\n' +
+                'Довжини сторін:\n  a = ' + side1.toFixed(4) + '\n  b = ' + side2.toFixed(4) + '\n  c = ' + side3.toFixed(4) + '\n\n' +
+                'Периметр P = a + b + c = ' + perimeter.toFixed(4);
+
+            alert(resultText);
+            console.log('Завдання 2. Трикутник — периметр');
+            console.log('Вершини: (' + x1 + ',' + y1 + '), (' + x2 + ',' + y2 + '), (' + x3 + ',' + y3 + ')');
+            console.log('Сторони: a =', side1.toFixed(4), ', b =', side2.toFixed(4), ', c =', side3.toFixed(4));
+            console.log('Периметр:', perimeter.toFixed(4));
+        }
+
+        window.addEventListener('load', function () {
+            runTask2();
+        });
+    </script>
+</body>
+</html>
